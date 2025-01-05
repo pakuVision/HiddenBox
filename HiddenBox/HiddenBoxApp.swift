@@ -11,7 +11,7 @@ import SwiftUI
 struct HiddenBoxApp: App {
 
     @State private var appModel = AppModel()
-
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
