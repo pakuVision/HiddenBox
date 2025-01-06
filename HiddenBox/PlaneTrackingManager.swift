@@ -89,6 +89,7 @@ class PlaneTrackingManager {
                 
                 // 衝突判定用のメッシュを作成
                 var shape: ShapeResource?
+            
                 do {
                     let vertices = anchor.geometry.meshVertices.asSIMD3(ofType: Float.self)
                     shape = try await ShapeResource.generateStaticMesh(positions: vertices,
@@ -117,12 +118,21 @@ class PlaneTrackingManager {
 extension MeshResource.Contents {
     init(planeGeometry: PlaneAnchor.Geometry) {
         self.init()
-        self.instances = [MeshResource.Instance(id: "main", model: "model")]
-        var part = MeshResource.Part(id: "part", materialIndex: 0)
-        part.positions = MeshBuffers.Positions(planeGeometry.meshVertices.asSIMD3(ofType: Float.self))
         
+        // MeshResorceは 複数Model(3d object)を持つことができるので instancesに 3Dモデルのインスタンスを格納
+        // この時点では、まだ modelは作成されていないが、後で MeshResource.Model(id: "model", parts: [part])として作成される
+        self.instances = [MeshResource.Instance(id: "main", model: "model")]
+        
+        // partは 3D_Meshの一部分(パーツ) を表す
+        var part = MeshResource.Part(id: "part", materialIndex: 0)
+        // 頂点情報
+        part.positions = MeshBuffers.Positions(planeGeometry.meshVertices.asSIMD3(ofType: Float.self))
+        // 三角面情報
         part.triangleIndices = MeshBuffer(planeGeometry.meshFaces.asUInt32Array())
         
+        // MeshResource.Modelは 1つ or 複数の partをまとめたもの
+        // Partをまとめて RealityKitの Modelを作成
+        // ここでは planeAnchorなので partは基本1個なので [part] の形でセット
         self.models = [MeshResource.Model(id: "model", parts: [part])]
     }
 }
@@ -155,6 +165,7 @@ extension GeometrySource {
                 // index1 - 12
                 // index2 - 24
                 // ...
+            
                 // offsetは基本的に 0なので、最初のデータは 先頭から読み取れる
                 // offsetを使う理由としてinterleavedされる可能性があるため
                 // (よくわからないが、ARKitパフォーマンス向上のためにデータを最適化されることでoffset!=0になることがある)
